@@ -5,33 +5,37 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
+import com.weatherforecasts.cityrecycler.CityAdapter
 import com.weatherforecasts.openweathermap.*
 
 class MainActivity : AppCompatActivity() {
     private var txtInfo: TextView? = null
     private var btnAction: Button? = null
+    private var btnUpdate: Button? = null
     private var txtCity: EditText? = null
+    private var recyclerCity: RecyclerView? = null
+
 
     private val openWeather = OpenWeather(null) // Экземпляр предсказателя погоды
 
     private val cities = mutableSetOf<City>() // Глобальное хранилище городов
+    private val cityAdapter = CityAdapter(cities)
 
     // Слушатель для обновления данных о погоде
     private val weatherListener = object : UpdateWeatherInfo {
         override fun inserCity(cityLocationList: List<Cities>) {
             addCity(cityLocationList)
-            printAllCities()
         }
 
         override fun message(msg: String) {
             Snackbar.make(txtInfo!!, msg, Snackbar.LENGTH_SHORT).show()
-            printAllCities()
         }
 
         override fun UpdateCurrentWeather(weather: CityWeather, cityName: String) {
             updateWeather(weather, cityName)
-            printAllCities()
         }
     }
 
@@ -49,6 +53,13 @@ class MainActivity : AppCompatActivity() {
         txtInfo = findViewById(R.id.txt_info)
         txtCity = findViewById(R.id.txt_city)
         btnAction = findViewById(R.id.btn_action)
+        btnUpdate = findViewById(R.id.btn_update)
+        recyclerCity = findViewById(R.id.recycler_city)
+
+        val layOut = LinearLayoutManager(this)
+        layOut.orientation = RecyclerView.HORIZONTAL
+        recyclerCity?.layoutManager = layOut
+        recyclerCity?.adapter = this.cityAdapter
     }
 
     private fun uiBehaviour() {
@@ -58,23 +69,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        txtInfo?.setOnClickListener {
+        btnUpdate?.setOnClickListener {
             cities.forEach {
                 openWeather.getWeather(it.lat, it.lon, it.cityName)
             }
-
         }
-    }
-
-    private fun printAllCities() {
-        val strBuild = StringBuilder()
-        this.cities.forEach {
-            strBuild.append(it.cityName)
-                .append("T=${it.temperature}")
-                .append("\n")
-        }
-        txtInfo?.text = strBuild.toString()
-
     }
 
     private fun addCity(cities: List<Cities>) {
@@ -88,17 +87,18 @@ class MainActivity : AppCompatActivity() {
                 )
             )
         }
+        this.cityAdapter.notifyItemInserted(this.cities.size)
     }
 
     private fun updateWeather(weather: CityWeather, cityName: String) {
+        var iterator = 0
         this.cities.forEach {
-            if (it.cityName.equals(cityName)) {
+            if (it.cityName == cityName) {
                 it.temperature = weather.main.temp
+                this.cityAdapter.notifyItemChanged(iterator)
             }
+            iterator++
         }
     }
 
-    private fun updateCityInfo(){
-
-    }
 }
