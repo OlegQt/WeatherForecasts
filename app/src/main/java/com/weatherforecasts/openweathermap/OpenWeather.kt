@@ -4,7 +4,7 @@ import android.util.Log
 import retrofit2.*
 import retrofit2.converter.gson.GsonConverterFactory
 
-class OpenWeather {
+class OpenWeather(val listener: UpdateWeatherInfo) {
     private val baseUrl = "https://api.openweathermap.org/"
     private val appKey = "ce2b06f255f2307c07504a706c9d920d"
     private val TAG = "OpenWeather"
@@ -25,12 +25,12 @@ class OpenWeather {
             ) {
                 Log.d(TAG,response.code().toString())
                 if(response.code().equals(200)){
-                    val citiesLocations: List<CitiesLocation>? =
-                        response.body()
-                    if (!citiesLocations.isNullOrEmpty()){
-                        citiesLocations.forEach{
-                            Log.d(TAG,it.name+it.country)
+                    val citiesLocations = mutableListOf<CitiesLocation>()
+                    if (!response.body().isNullOrEmpty()){
+                        response.body()?.forEach {
+                            citiesLocations.add(it)
                         }
+                        listener.updateCityLocation(citiesLocations)
                     }
                 }
             }
