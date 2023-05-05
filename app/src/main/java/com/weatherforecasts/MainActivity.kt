@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
         btnUpdate = findViewById(R.id.btn_update)
         recyclerCity = findViewById(R.id.recycler_city)
 
-        val layOut=LinearLayoutManager(this)
+        val layOut = LinearLayoutManager(this)
         layOut.orientation = RecyclerView.HORIZONTAL
         recyclerCity?.layoutManager = layOut
         recyclerCity?.adapter = this.cityAdapter
@@ -76,7 +76,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
     private fun addCity(cities: List<Cities>) {
         cities.forEach {
             this.cities.add(
@@ -88,13 +87,13 @@ class MainActivity : AppCompatActivity() {
                 )
             )
         }
-        this.cityAdapter.notifyDataSetChanged()
+        this.cityAdapter.notifyItemInserted(this.cities.size)
     }
 
     private fun updateWeather(weather: CityWeather, cityName: String) {
         var iterator = 0
         this.cities.forEach {
-            if (it.cityName.equals(cityName)) {
+            if (it.cityName == cityName) {
                 it.temperature = weather.main.temp
                 this.cityAdapter.notifyItemChanged(iterator)
             }
