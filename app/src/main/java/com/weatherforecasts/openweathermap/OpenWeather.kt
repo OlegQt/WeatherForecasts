@@ -4,10 +4,11 @@ import android.util.Log
 import retrofit2.*
 import retrofit2.converter.gson.GsonConverterFactory
 
-class OpenWeather(val listener: UpdateWeatherInfo) {
+class OpenWeather(var listener: UpdateWeatherInfo?) {
     private val baseUrl = "https://api.openweathermap.org/"
     private val appKey = "ce2b06f255f2307c07504a706c9d920d"
     private val TAG = "OpenWeather"
+
 
     var retrofit: Retrofit = Retrofit.Builder()
         .baseUrl(baseUrl)
@@ -15,6 +16,10 @@ class OpenWeather(val listener: UpdateWeatherInfo) {
         .build()
 
     val openWeather = retrofit.create(OpenWeatherApi::class.java)
+
+    fun setNewListener(listener: UpdateWeatherInfo){
+        this.listener = listener
+    }
 
     fun getLocations(cityName: String) {
         val call = openWeather.getCitiesLocation(cityName, appKey)
@@ -30,7 +35,7 @@ class OpenWeather(val listener: UpdateWeatherInfo) {
                         response.body()?.forEach {
                             citiesLocations.add(it)
                         }
-                        listener.updateCityLocation(citiesLocations)
+                        listener?.updateCityLocation(citiesLocations)
                     }
                 }
             }
