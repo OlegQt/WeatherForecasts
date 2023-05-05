@@ -6,36 +6,43 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import com.google.android.material.snackbar.Snackbar
-import com.weatherforecasts.openweathermap.Cities
-import com.weatherforecasts.openweathermap.OpenWeather
-import com.weatherforecasts.openweathermap.UpdateWeatherInfo
+import com.weatherforecasts.openweathermap.*
 
 class MainActivity : AppCompatActivity() {
     private var txtInfo: TextView? = null
     private var btnAction: Button? = null
     private var txtCity: EditText? = null
 
-    private val openWeather = OpenWeather(null)
-    private val cityLocations = mutableListOf<Cities>()
+    private val openWeather = OpenWeather(null) // Экземпляр предсказателя погоды
 
+    private val cities = mutableSetOf<City>() // Глобальное хранилище городов
+
+    // Слушатель для обновления данных о погоде
     private val updateWeather = object : UpdateWeatherInfo {
-        override fun updateCityLocation(cityLocationList: List<Cities>) {
-            updateCityList(cityLocationList)
+        override fun inserCity(cityLocationList: List<Cities>) {
+            addCity(cityLocationList)
+            printAllCities()
         }
 
         override fun message(msg: String) {
             Snackbar.make(txtInfo!!, msg, Snackbar.LENGTH_SHORT).show()
+            printAllCities()
+        }
+
+        override fun UpdateCurrentWeather(weather: CityWeather, cityName: String) {
+            updateWeather(weather, cityName)
+            printAllCities()
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        deployUi()
-        uiBehaviour()
 
-        openWeather.setNewListener(updateWeather)
-        //openWeather.getLocations("Petersburg")
+        deployUi() // Развертываем GUI
+        uiBehaviour() // Вешаем слушателей
+
+        openWeather.setNewListener(updateWeather) // Инициализируем слушателя внутри WeatherApi
     }
 
     private fun deployUi() {
@@ -52,21 +59,42 @@ class MainActivity : AppCompatActivity() {
         }
 
         txtInfo?.setOnClickListener {
-            val location = cityLocations[0]
-            openWeather.getWeather(location.lat, location.lon)
+            cities.forEach {
+                openWeather.getWeather(it.lat, it.lon, it.cityName)
+            }
+
         }
     }
 
-    private fun updateCityList(cities: List<Cities>) {
-        cities.forEach {
-            cityLocations.add(it)
+    private fun printAllCities() {
+        val strBuild = StringBuilder()
+        this.cities.forEach {
+            strBuild.append(it.cityName)
+                .append("T=${it.temperature}")
+                .append("\n")
         }
-        if(txtInfo!=null){
-            val strBuild = StringBuilder()
-            this.cityLocations.forEach {
-                strBuild.append(it.toString()).append("\n")
+        txtInfo?.text = strBuild.toString()
+
+    }
+
+    private fun addCity(cities: List<Cities>) {
+        cities.forEach {
+            this.cities.add(
+                City(
+                    it.name,
+                    0.0,
+                    it.lat,
+                    it.lon
+                )
+            )
+        }
+    }
+
+    private fun updateWeather(weather: CityWeather, cityName: String) {
+        this.cities.forEach {
+            if (it.cityName.equals(cityName)) {
+                it.temperature = weather.main.temp
             }
-            txtInfo?.text = strBuild.toString()
         }
     }
 }

@@ -38,7 +38,7 @@ class OpenWeather(var listener: UpdateWeatherInfo?) {
                         response.body()?.forEach {
                             citiesLocations.add(it)
                         }
-                        listener?.updateCityLocation(citiesLocations)
+                        listener?.inserCity(citiesLocations)
                     }
                 }
             }
@@ -50,15 +50,13 @@ class OpenWeather(var listener: UpdateWeatherInfo?) {
         })
     }
 
-    fun getWeather(lat: Double, lon: Double) {
+    fun getWeather(lat: Double, lon: Double,cityName: String) {
         val call = openWeather.getWeather(lat, lon, appKey, "metric")
         call.enqueue(object : Callback<CityWeather> {
             override fun onResponse(call: Call<CityWeather>, response: Response<CityWeather>) {
-                Log.d(TAG, "W = ${response.code()}")
-                val y = response.body()?.main?.temp
-                Log.d(TAG, "feels like = $y")
-                listener?.message(y.toString())
-
+                if (response.body() != null) {
+                    listener?.UpdateCurrentWeather(response.body()!!,cityName)
+                }
             }
 
             override fun onFailure(call: Call<CityWeather>, t: Throwable) {
