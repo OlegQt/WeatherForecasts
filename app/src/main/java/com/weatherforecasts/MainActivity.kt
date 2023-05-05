@@ -18,7 +18,7 @@ class MainActivity : AppCompatActivity() {
     private val cities = mutableSetOf<City>() // Глобальное хранилище городов
 
     // Слушатель для обновления данных о погоде
-    private val updateWeather = object : UpdateWeatherInfo {
+    private val weatherListener = object : UpdateWeatherInfo {
         override fun inserCity(cityLocationList: List<Cities>) {
             addCity(cityLocationList)
             printAllCities()
@@ -42,7 +42,7 @@ class MainActivity : AppCompatActivity() {
         deployUi() // Развертываем GUI
         uiBehaviour() // Вешаем слушателей
 
-        openWeather.setNewListener(updateWeather) // Инициализируем слушателя внутри WeatherApi
+        openWeather.setNewListener(weatherListener) // Инициализируем слушателя внутри WeatherApi
     }
 
     private fun deployUi() {
@@ -96,5 +96,9 @@ class MainActivity : AppCompatActivity() {
                 it.temperature = weather.main.temp
             }
         }
+    }
+
+    private fun updateCityInfo(){
+
     }
 }
