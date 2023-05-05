@@ -9,5 +9,13 @@ interface OpenWeatherApi {
     fun getCitiesLocation(
         @Query("q") cityName:String,
         @Query("appid") appKey:String
-    ):Call<List<CitiesLocation>>
+    ):Call<List<Cities>>
+
+    @GET("/data/2.5/weather")
+    fun getWeather(
+        @Query("lat") lat:Double,
+        @Query("lon") lon:Double,
+        @Query("appid") appKey: String,
+        @Query("units") options:String
+    ):Call<CityWeather>
 }

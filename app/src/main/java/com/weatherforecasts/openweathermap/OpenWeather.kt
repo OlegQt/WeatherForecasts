@@ -1,7 +1,10 @@
 package com.weatherforecasts.openweathermap
 
 import android.util.Log
-import retrofit2.*
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 class OpenWeather(var listener: UpdateWeatherInfo?) {
@@ -10,28 +13,28 @@ class OpenWeather(var listener: UpdateWeatherInfo?) {
     private val TAG = "OpenWeather"
 
 
-    var retrofit: Retrofit = Retrofit.Builder()
+    private var retrofit: Retrofit = Retrofit.Builder()
         .baseUrl(baseUrl)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
-    val openWeather = retrofit.create(OpenWeatherApi::class.java)
+    private val openWeather: OpenWeatherApi = retrofit.create(OpenWeatherApi::class.java)
 
-    fun setNewListener(listener: UpdateWeatherInfo){
+    fun setNewListener(listener: UpdateWeatherInfo) {
         this.listener = listener
     }
 
     fun getLocations(cityName: String) {
         val call = openWeather.getCitiesLocation(cityName, appKey)
-        call.enqueue(object :Callback<List<CitiesLocation>>{
+        call.enqueue(object : Callback<List<Cities>> {
             override fun onResponse(
-                call: Call<List<CitiesLocation>>,
-                response: Response<List<CitiesLocation>>
+                call: Call<List<Cities>>,
+                response: Response<List<Cities>>
             ) {
-                Log.d(TAG,response.code().toString())
-                if(response.code().equals(200)){
-                    val citiesLocations = mutableListOf<CitiesLocation>()
-                    if (!response.body().isNullOrEmpty()){
+                //Log.d(TAG,response.code().toString())
+                if (response.code() == 200) {
+                    val citiesLocations = mutableListOf<Cities>()
+                    if (!response.body().isNullOrEmpty()) {
                         response.body()?.forEach {
                             citiesLocations.add(it)
                         }
@@ -40,10 +43,27 @@ class OpenWeather(var listener: UpdateWeatherInfo?) {
                 }
             }
 
-            override fun onFailure(call: Call<List<CitiesLocation>>, t: Throwable) {
-                Log.d(TAG,"fail".toString())
+            override fun onFailure(call: Call<List<Cities>>, t: Throwable) {
+                Log.d(TAG, "fail")
             }
 
+        })
+    }
+
+    fun getWeather(lat: Double, lon: Double) {
+        val call = openWeather.getWeather(lat, lon, appKey, "metric")
+        call.enqueue(object : Callback<CityWeather> {
+            override fun onResponse(call: Call<CityWeather>, response: Response<CityWeather>) {
+                Log.d(TAG, "W = ${response.code()}")
+                val y = response.body()?.main?.temp
+                Log.d(TAG, "feels like = $y")
+                listener?.message(y.toString())
+
+            }
+
+            override fun onFailure(call: Call<CityWeather>, t: Throwable) {
+                Log.d(TAG, "Weather fail")
+            }
         })
     }
 
